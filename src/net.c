@@ -43,12 +43,7 @@ int bind6(const char* host, int port) {
 
 void send_receive_loop() {
 
-	int i;
-	for(i = 0;i<num_sockets;i++) {
-		printf("socket %d: %d\n",i,sockets[i]);
-	}
-	while(1) {
-	}
+	/* use select method */
 	/*
 	char msg[mtu], *sbuffer;	
 	struct sockaddr_in cliAddr;
