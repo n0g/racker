@@ -23,29 +23,32 @@ config_t* config_initialize(char* filename) {
 void config_listeners(config_t *config) {
 	config_setting_t *interfaces,*interface;
 	const char *type,*hostname;
-	int port, interface_num = 0;
+	int portnr, interface_num;
 
 	/* read interface settings */
 	if((interfaces = config_lookup(config,"interfaces")) == NULL) {
 		fprintf(stderr,"Couldn't read Interfaces\n");
 	}
+	
+	interface_num = config_setting_length(interfaces);
+	while(interface_num--) {
+		interface = config_setting_get_elem(interfaces,interface_num);
 
-	while((interface = config_setting_get_elem(interfaces,interface_num)) != NULL) {
 		if(!(config_setting_lookup_string(interface,"type",&type) &&
 		config_setting_lookup_string(interface,"hostname",&hostname) &&
-		config_setting_lookup_int(interface,"port",&port))) {
+		config_setting_lookup_int(interface,"port",(long*) &portnr))) {
 			continue;
 		}
-		
-		interface_num++;
+		printf("Interface %d\n\tType: %s\n\tHostname: %s\n\tPort: %d\n",interface_num,type,hostname,portnr);
 	}
 }
 
-void config_other(char *filename) {
+void config_other(config_t *config) {
 	
 }
 
 int main(int argc, char *argv[]) {
-	config_listeners(argv[1]);
+	config_t *cfg = config_initialize(argv[1]);
+	config_listeners(cfg);
 	return EXIT_SUCCESS;
 }
