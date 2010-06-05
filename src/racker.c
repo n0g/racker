@@ -25,81 +25,65 @@
  * Version: 0.15 (2009-Apr-04) support for the ipv6 announce - no support for running the server on ipv6 YET
  * Version: 0.16 (2009-Apr-04) Everything gets logged to syslog, created init script, racker gets daemonized + drops root rights
  * Version: 0.20 (2009-Apr-05) IPv6 support (not yet fully tested) - code clean up, new structure, easy exchange of database backend possible
- *
- * TODO:	
- *
- * Nice-to-Haves
- * 		Authentication
- * 		Check if connection_id is known
- *
- * 		Database support for at least postgres (sqlite?)
- * 		using dynamic link loader (dlopen) to load the right shared object
  */
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <string.h>
-#include <pthread.h>
 #include <signal.h>
 #include <syslog.h>
 #include <libconfig.h>
 
 #include "config.h"
-#include "actions.h"
 #include "utils.h"
 #include "net.h"
-#include "database.h"
 
-char* get_config_file(int argc, char* argv[]);
 void usage();
+void version();
 
 int main(int argc, char *argv[]) {	
-	char* config;
-	
-	//open syslog
-	openlog(argv[0], LOG_PID|LOG_CONS, LOG_DAEMON);
-	syslog(LOG_INFO,"----- racker is starting -----");
-
-	//read config file location from option
-	config = get_config_file(argc,argv);	
-	/* parse config file */
-	config_t *cfg = config_initialize(config);
-	//read misc config variables 
-	config_other(cfg);
-	//fall to background
-	daemonize();
-
-	//install signal handler - clean closing on shutdown
-	signal( SIGTERM, sig_handler );
-
-	config_listeners(cfg);
-
-	return EXIT_SUCCESS;
-}
-
-char* get_config_file(int argc, char* argv[]) {
-	int c;
+	int c, debug = 0;
+	char* configfile;
 	extern char *optarg;
 
-	while ((c = getopt(argc, argv, "vf:")) != -1) {
+	/* parse arguments */
+	while ((c = getopt(argc, argv, "dvf:")) != -1) {
     		switch(c) {
     			case 'v':
-        			printf("racker-%.2f, © 2009 Matthias Fassl\n\n",VERSION);
-				printf("build machine: %s\nbuild date: %s\n",BUILDMACHINE,BUILDDATE);
-				exit(EXIT_SUCCESS);
+				version();
+				break;
     			case 'f':
-				return optarg;
-			case 'd'
-				/* debug option */
+				configfile = optarg;
+				break;
+			case 'd':
+				debug = 1;
 				break;
     			case '?':
 				usage();
     		}
 	}
-	usage();
+	/* open syslog */
+	if(!debug) {
+		openlog(argv[0], LOG_PID|LOG_CONS, LOG_DAEMON);
+		syslog(LOG_INFO,"----- racker is starting -----");
+	}
+	/* parse config file */
+	config_t *cfg = config_initialize(configfile);
+	/* read misc config variables */
+	config_other(cfg);
+	/* fall to background */
+	if(!debug) {
+		daemonize();
+	}
+	/* install signal handler - clean closing on shutdown */
+	signal(SIGTERM,sig_handler);
+	/* configure network listeners */
+	config_listeners(cfg);
+	return EXIT_SUCCESS;
+}
+
+void version() {
+        printf("racker-%.2f, © 2009 Matthias Fassl\n\n",VERSION);
+	printf("build machine: %s\nbuild date: %s\n",BUILDMACHINE,BUILDDATE);
+	exit(EXIT_SUCCESS);
 }
 
 void usage() {
