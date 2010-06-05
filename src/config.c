@@ -23,7 +23,7 @@ config_t* config_initialize(char* filename) {
 void config_listeners(config_t *config) {
 	config_setting_t *interfaces,*interface;
 	const char *type,*hostname;
-	int portnr, interface_num;
+	int portnr, interface_num, sock;
 
 	/* read interface settings */
 	if((interfaces = config_lookup(config,"interfaces")) == NULL) {
@@ -39,18 +39,23 @@ void config_listeners(config_t *config) {
 		config_setting_lookup_int(interface,"port",(long*) &portnr))) {
 			continue;
 		}
-		printf("Interface %d\n\tType: %s\n\tHostname: %s\n\tPort: %d\n",interface_num,type,hostname,portnr);
+		/* bind to interface */
+		if(strcmp(type,"IPv4") == 0) {
+			sock = bind4(hostname,portnr);
+		} else if(strcmp(type,"IPv6") == 0) {
+			sock = bind6(hostname,portnr);
+		}
+		/* add interface to some kind of global list */
 	}
+	/* call aproppriate send/receive loop */
 }
 
 void config_other(config_t *config) {
-	int mtu, interval;
-	const char *user, *pidfile;
-
-	if(config_lookup_int(config,"others.interval",(long*)&interval) &&
+	if(!(config_lookup_int(config,"others.interval",(long*)&interval) &&
 	config_lookup_int(config,"others.mtu",(long*)&mtu) &&
 	config_lookup_string(config,"others.user",&user) &&
-	config_lookup_string(config,"others.pidfile",&pidfile)) {
-		printf("Interval: %d\nMaximum Transfer Unit: %d\nUsername: %s\nPID File: %s\n",interval,mtu,user,pidfile);
+	config_lookup_string(config,"others.pidfile",&pidfile))) {
+		fprintf(stderr,"couldn't read miscoptions from config file\n");
+		exit(EXIT_FAILURE);
 	}
 }
