@@ -45,6 +45,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <syslog.h>
+#include <libconfig.h>
 
 #include "config.h"
 #include "actions.h"
@@ -56,7 +57,6 @@ char* get_config_file(int argc, char* argv[]);
 void usage();
 
 int main(int argc, char *argv[]) {	
-
 	char* config;
 	
 	//open syslog
@@ -65,39 +65,36 @@ int main(int argc, char *argv[]) {
 
 	//read config file location from option
 	config = get_config_file(argc,argv);	
-	//read database config and connect to database
-	config_database(config);
+	/* parse config file */
+	config_t *cfg = config_initialize(config);
 	//read misc config variables 
-	config_other(config);
+	config_other(cfg);
 	//fall to background
 	daemonize();
 
 	//install signal handler - clean closing on shutdown
 	signal( SIGTERM, sig_handler );
 
-	config_listeners(config);
+	config_listeners(cfg);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 char* get_config_file(int argc, char* argv[]) {
-
-	int c, file=-1;
-	char *filename;
+	int c;
 	extern char *optarg;
-	extern int optind, optopt, opterr;
 
-	while ((c = getopt(argc, argv, ":vf:")) != -1) {
+	while ((c = getopt(argc, argv, "vf:")) != -1) {
     		switch(c) {
     			case 'v':
         			printf("racker-%.2f, © 2009 Matthias Fassl\n\n",VERSION);
 				printf("build machine: %s\nbuild date: %s\n",BUILDMACHINE,BUILDDATE);
-				exit(0);
+				exit(EXIT_SUCCESS);
     			case 'f':
-        			filename = optarg;
-				return filename;
-   			 case ':':
-				usage();
+				return optarg;
+			case 'd'
+				/* debug option */
+				break;
     			case '?':
 				usage();
     		}
@@ -106,9 +103,8 @@ char* get_config_file(int argc, char* argv[]) {
 }
 
 void usage() {
-
 	printf("Usage:\n\n");
 	printf("'racker -v' for Version\n");
-	printf("'rakcer -f /path/to/racker.conf' to start daemon\n");
-	exit(1);
+	printf("'racker -f /path/to/racker.conf' to start daemon\n");
+	exit(EXIT_FAILURE);
 }
