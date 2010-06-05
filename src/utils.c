@@ -20,13 +20,15 @@ uint64_t generate_connection_id() {
         return connection_id;
 }
 
+/*
 char* strToHexStr(char* str, int len) {
 	//TODO: remove dependancy on mysql library
         char *newstr = malloc(len*2+1);
         mysql_hex_string(newstr,str,len);
         return(newstr);
 }
-/*
+*/
+
 char* strToHexStr(char *str,int len)
 {
 	char *hex = malloc(len*2+1);
@@ -39,12 +41,10 @@ char* strToHexStr(char *str,int len)
 	*hex = '\0';
 	return rtr;
 } 
-*/
 
 void sig_handler(int signal) {
 
 	syslog(LOG_INFO,"----- racker is stopping -----");
-	disconnect_database();
 	closelog();
 
 	int i;
@@ -75,6 +75,6 @@ void daemonize() {
         pid = fork();
         if (pid > 0) {
                 syslog(LOG_INFO,"Exiting Parent");
-                exit(0);
+                exit(EXIT_SUCCESS);
         }
 }

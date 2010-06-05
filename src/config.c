@@ -47,10 +47,10 @@ void config_other(config_t *config) {
 	int mtu, interval;
 	const char *user, *pidfile;
 
-	config_lookup_int(config,"others.interval",(long*)&interval);
-	config_lookup_int(config,"others.mtu",(long*)&mtu);
-	config_lookup_string(config,"others.user",&user);
-	config_lookup_string(config,"others.pidfile",&pidfile);
-	
-	printf("Interval: %d\nMaximum Transfer Unit: %d\nUsername: %s\nPID File: %s\n",interval,mtu,user,pidfile);
+	if(config_lookup_int(config,"others.interval",(long*)&interval) &&
+	config_lookup_int(config,"others.mtu",(long*)&mtu) &&
+	config_lookup_string(config,"others.user",&user) &&
+	config_lookup_string(config,"others.pidfile",&pidfile)) {
+		printf("Interval: %d\nMaximum Transfer Unit: %d\nUsername: %s\nPID File: %s\n",interval,mtu,user,pidfile);
+	}
 }

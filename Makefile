@@ -1,6 +1,6 @@
 VERSION=0.2
 CC = gcc
-CFLAGS =  -static -Wall -ansi -pedantic -g $(shell pkg-config --cflags libconfig) -I inc -DVERSION=$(VERSION) -DBUILDDATE=$(BUILDDATE) -DBUILDMACHINE=$(BUILDMACHINE)
+CFLAGS = -static -g $(shell pkg-config --cflags libconfig) -I inc -DVERSION=$(VERSION) -DBUILDDATE=$(BUILDDATE) -DBUILDMACHINE=$(BUILDMACHINE)
 LDFLAGS = $(shell pkg-config --libs libconfig)
 TARGET=/usr
 BUILDDATE="\"$(shell date +%Y-%m-%d)\""

@@ -10,7 +10,7 @@
  * IPv6: http://opentracker.blog.h3q.com/2007/12/28/the-ipv6-situation/
  *
  * Author: Matthias Fassl <mf@x1598.at>
- * License: AFLv3
+ * License: MIT
  *
  * Version: 0.01 (2009-Feb-01) shows Connection_id, action and Transaction_id of incoming requests
  * Version: 0.02 (2009-Mar-23) answers connect requests successfully
@@ -34,14 +34,13 @@
 
 #include "config.h"
 #include "utils.h"
-#include "net.h"
 
 void usage();
 void version();
 
 int main(int argc, char *argv[]) {	
 	int c, debug = 0;
-	char* configfile;
+	char* configfile = NULL;
 	extern char *optarg;
 
 	/* parse arguments */
@@ -59,6 +58,10 @@ int main(int argc, char *argv[]) {
     			case '?':
 				usage();
     		}
+	}
+	if(configfile == NULL) {
+		fprintf(stderr,"You need to specify a configuration file\n");
+		usage();
 	}
 	/* open syslog */
 	if(!debug) {
@@ -81,14 +84,15 @@ int main(int argc, char *argv[]) {
 }
 
 void version() {
-        printf("racker-%.2f, © 2009 Matthias Fassl\n\n",VERSION);
+        printf("racker-%.2f, © 2009-2010 Matthias Fassl\n\n",VERSION);
 	printf("build machine: %s\nbuild date: %s\n",BUILDMACHINE,BUILDDATE);
 	exit(EXIT_SUCCESS);
 }
 
 void usage() {
-	printf("Usage:\n\n");
-	printf("'racker -v' for Version\n");
-	printf("'racker -f /path/to/racker.conf' to start daemon\n");
+	printf("Usage:\n");
+	printf("\t-v for version information\n");
+	printf("\t-f \"FILE\" specify which configuration file to use (necessary)\n");
+	printf("\t-d debug mode\n");
 	exit(EXIT_FAILURE);
 }
