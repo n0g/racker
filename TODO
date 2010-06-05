@@ -1,5 +1,6 @@
 Network Socket handling via poll() and select() calls
-configuration file handling via libconfig
 data storage using a binary tree
 
 structs and enums for message packets
+authentication (read auth info via libconfig)
+logmsg which uses debug variable
