@@ -1,6 +1,7 @@
 #include <syslog.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libconfig.h>
 
 #include "actions.h"
 #include "database.h"

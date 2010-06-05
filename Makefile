@@ -5,7 +5,7 @@ LDFLAGS = $(shell pkg-config --libs libconfig)
 TARGET=/usr
 BUILDDATE="\"$(shell date +%Y-%m-%d)\""
 BUILDMACHINE="\"$(shell uname -mor)\""
-OBJ = net.o utils.o actions.o config.o racker.o
+OBJ = racker.o config.o utils.o net.o actions.o 
 
 all: $(OBJ)
 	$(CC) $(CFLAGS) -o racker $(OBJ) $(LDFLAGS)

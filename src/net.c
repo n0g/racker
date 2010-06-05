@@ -2,6 +2,7 @@
 #include <string.h>
 #include <byteswap.h>
 #include <endian.h>
+#include <libconfig.h>
 
 #include "net.h"
 #include "config.h"
