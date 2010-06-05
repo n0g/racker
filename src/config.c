@@ -54,10 +54,3 @@ void config_other(config_t *config) {
 	
 	printf("Interval: %d\nMaximum Transfer Unit: %d\nUsername: %s\nPID File: %s\n",interval,mtu,user,pidfile);
 }
-
-int main(int argc, char *argv[]) {
-	config_t *cfg = config_initialize(argv[1]);
-	config_listeners(cfg);
-	config_other(cfg);
-	return EXIT_SUCCESS;
-}
