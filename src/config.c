@@ -27,10 +27,12 @@ void config_listeners(config_t *config) {
 
 	/* read interface settings */
 	if((interfaces = config_lookup(config,"interfaces")) == NULL) {
-		fprintf(stderr,"Couldn't read Interfaces\n");
+		logmsg(LOG_ERR,"Couldn't read Interfaces\n");
 	}
 	
 	interface_num = config_setting_length(interfaces);
+	sockets = malloc(sizeof(int)*interface_num);
+	num_sockets = 0;
 	while(interface_num--) {
 		interface = config_setting_get_elem(interfaces,interface_num);
 
@@ -46,8 +48,12 @@ void config_listeners(config_t *config) {
 			sock = bind6(hostname,portnr);
 		}
 		/* add interface to some kind of global list */
+		sockets[num_sockets] = sock;
+		num_sockets++;
+		
 	}
 	/* call aproppriate send/receive loop */
+	send_receive_loop();
 }
 
 void config_other(config_t *config) {
@@ -55,7 +61,7 @@ void config_other(config_t *config) {
 	config_lookup_int(config,"others.mtu",(long*)&mtu) &&
 	config_lookup_string(config,"others.user",&user) &&
 	config_lookup_string(config,"others.pidfile",&pidfile))) {
-		fprintf(stderr,"couldn't read miscoptions from config file\n");
+		logmsg(LOG_ERR,"couldn't read miscoptions from config file\n");
 		exit(EXIT_FAILURE);
 	}
 }

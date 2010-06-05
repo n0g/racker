@@ -7,7 +7,6 @@
 #include "net.h"
 
 uint64_t generate_connection_id() {
-
         uint64_t connection_id;
         uint32_t tmp;
 
@@ -29,8 +28,7 @@ char* strToHexStr(char* str, int len) {
 }
 */
 
-char* strToHexStr(char *str,int len)
-{
+char* strToHexStr(char *str,int len) {
 	char *hex = malloc(len*2+1);
 	char *rtr = hex;
 
@@ -43,17 +41,17 @@ char* strToHexStr(char *str,int len)
 } 
 
 void sig_handler(int signal) {
+	logmsg(LOG_INFO,"----- racker is stopping -----");
+	if(!debug) {
+		closelog();
+	}
 
-	syslog(LOG_INFO,"----- racker is stopping -----");
-	closelog();
-
-	int i;
-	for(i=0;i<num_sockets;i++)
-		shutdown(sockets[i],2);
+	while(num_sockets--) {
+		shutdown(sockets[num_sockets],2);
+	}
 }
 
 void write_pid_file(char* filename, int pid) {
-
         FILE *file;
         file = fopen(filename,"w");
         fprintf(file,"%u",pid);
@@ -62,7 +60,6 @@ void write_pid_file(char* filename, int pid) {
 }
 
 void drop_root_rights(char* username) {
-
         struct passwd *user;
         user = getpwnam(username);
         setuid(user->pw_uid);
@@ -70,11 +67,23 @@ void drop_root_rights(char* username) {
 }
 
 void daemonize() {
-
         int pid;
         pid = fork();
         if (pid > 0) {
-                syslog(LOG_INFO,"Exiting Parent");
+                logmsg(LOG_INFO,"Exiting Parent");
                 exit(EXIT_SUCCESS);
         }
+}
+
+void logmsg(int loglvl, const char* message) {
+	if(debug) {
+		if(loglvl == LOG_ERR) {
+			fprintf(stderr,"%s\n",message);
+		}
+		else {
+			printf("%s\n",message);
+		}
+	} else {
+        	syslog(loglvl,"%s",message);
+	}
 }

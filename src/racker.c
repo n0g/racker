@@ -39,11 +39,12 @@ void usage();
 void version();
 
 int main(int argc, char *argv[]) {	
-	int c, debug = 0;
+	int c;
 	char* configfile = NULL;
 	extern char *optarg;
 
 	/* parse arguments */
+	debug = 0;
 	while ((c = getopt(argc, argv, "dvf:")) != -1) {
     		switch(c) {
     			case 'v':
@@ -66,8 +67,8 @@ int main(int argc, char *argv[]) {
 	/* open syslog */
 	if(!debug) {
 		openlog(argv[0], LOG_PID|LOG_CONS, LOG_DAEMON);
-		syslog(LOG_INFO,"----- racker is starting -----");
 	}
+	logmsg(LOG_INFO,"----- racker is starting -----");
 	/* parse config file */
 	config_t *cfg = config_initialize(configfile);
 	/* read misc config variables */
