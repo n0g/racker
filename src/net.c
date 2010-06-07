@@ -42,8 +42,64 @@ int bind6(const char* host, int port) {
 }
 
 void send_receive_loop() {
+	fd_set fds;
 
 	/* use select method */
+	while(1) {
+		FD_ZERO(&fds);	
+		int numfds = num_sockets;
+		int max = 0;
+		while(numfds--) {
+			FD_SET(sockets[numfds],&fds);
+			if(sockets[numfds] > max) {
+				max = sockets[numfds];
+			}
+		}
+		select(max+1,&fds,NULL,NULL,NULL);
+		numfds = num_sockets;
+		while(numfds--) {
+			if(FD_ISSET(sockets[numfds],&fds)) {
+				printf("got data on interface %d\n",numfds);
+				char msg[mtu], *sbuffer;	
+				struct sockaddr_in cliAddr;
+				int cliLen, msgLen,sbufLen,socket;
+				memset(msg,0x0,mtu);
+				printf("call recvfrom\n");
+				msgLen = recvfrom(sockets[numfds], msg, mtu, 0, (struct sockaddr *) &cliAddr, &cliLen);
+				printf("decode data\n");
+				
+      
+				uint64_t connection_id;
+				int32_t action;
+				uint32_t transaction_id;
+				//get basic protocol details from client
+				memcpy(&connection_id,msg,8);
+				memcpy(&action,msg+8,4);
+				memcpy(&transaction_id,msg+12,4);
+	
+				//convert them to host order
+				#ifdef LITTLE_ENDIAN
+				connection_id = bswap_64(connection_id);
+				action = bswap_32(action);
+				transaction_id = bswap_32(transaction_id);
+				#endif
+				switch(action) {
+					case '0':
+						printf("CONNECT REQUEST\n");
+						break;
+					case '1':
+						printf("ANNOUNCE IPv4\n");
+						break;
+					case '2':
+						printf("SCRAPE\n");
+						break;
+					case '4':
+						printf("ANNOUNCE IPv6\n");
+						break;
+				}
+			}
+		}
+	}
 	/*
 	char msg[mtu], *sbuffer;	
 	struct sockaddr_in cliAddr;
