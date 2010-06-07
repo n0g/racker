@@ -1,6 +1,5 @@
-message decoding in a separate function
 structs and enums for message packets
 data storage using a binary tree
 
 authentication (read auth info via libconfig)
-logmsg which uses debug variable
+LOGMSG "\n" at end of message
