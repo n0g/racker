@@ -7,45 +7,43 @@
 #include "database.h"
 #include "utils.h"
 #include "config.h"
+#include "net.h"
 
 char* connect_request(int* sbufLen,uint64_t connection_id, uint32_t transaction_id) {
 
-	int32_t action;
-	action = 0;
-	*sbufLen = 16;
-	char* sbuffer;
-
+	char *sbuffer;
+	struct bt_connect_reply reply;
+	reply.action = 0;	
+	reply.connection_id = generate_connection_id();
+	reply.transaction_id = transaction_id;
+	*sbufLen = sizeof(reply);
+	sbuffer = malloc(*sbufLen);
+	
 	/* will be 0x41727101980 (network order) on connect 
 	4497486125440 in decimal */
 	if( connection_id != 4497486125440LLU ) {
-
 		LOGMSG(LOG_INFO,"Client sent wrong connection_id on first connect");
 		sbuffer = errormsg(sbufLen,transaction_id, "Wrong connection_id on first connect.");
 		return sbuffer;
 	}
+
 	LOGMSG(LOG_DEBUG,"Connection id: %lld",connection_id);
 	/* TODO: save this generated connection id + ip in database */
- 	connection_id = generate_connection_id();
-	LOGMSG(LOG_DEBUG,"Transaction id: %u",transaction_id);
-	LOGMSG(LOG_DEBUG,"generated Connection ID: %lld",connection_id);
-
-	/* convert them to network order */
+	LOGMSG(LOG_DEBUG,"Transaction id: %u",reply.transaction_id);
+	LOGMSG(LOG_DEBUG,"generated Connection ID: %lld",reply.connection_id);
+	
+	
 	#ifdef LITTLE_ENDIAN
-	connection_id = bswap_64(connection_id);
-	action = bswap_32(action);
-	transaction_id = bswap_32(transaction_id);
+	reply.connection_id = bswap_64(reply.connection_id);
+	reply.action = bswap_32(reply.action);
+	reply.transaction_id = bswap_32(reply.transaction_id);
 	#endif
-	
-	/* answer */
-	sbuffer = malloc(*sbufLen);
-	memcpy(sbuffer,&action,4);
-	memcpy(sbuffer+4,&transaction_id,4);
-	memcpy(sbuffer+8,&connection_id,8); 
-	
+
+	memcpy(sbuffer,&reply,16);
 	return sbuffer;
 }
 
-char* announce4(int* sbufLen,struct sockaddr_in cliAddr,uint64_t connection_id, uint32_t transaction_id, char msg[]) {
+char* announce4(int* sbufLen,struct sockaddr_in cliAddr,uint64_t connection_id, uint32_t transaction_id, const char *msg) {
 	
 	/* TODO: check if connection_id is known */
 
