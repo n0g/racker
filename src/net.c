@@ -135,7 +135,8 @@ struct bt_connect_request* unpack_connect(int msgLen,char *msg) {
 }
 
 char* pack_connect(int *msgLen,struct bt_connect_reply *reply) {
-	char *sbuffer = malloc(sizeof(struct bt_connect_reply));
+	*msgLen = sizeof(struct bt_connect_reply);
+	char *sbuffer = malloc(*msgLen);
 
         #ifdef LITTLE_ENDIAN
         reply->connection_id = bswap_64(reply->connection_id);
