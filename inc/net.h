@@ -51,13 +51,6 @@ struct bt_announce4_reply {
 	struct bt_peer4 *list;
 };
 
-struct bt_error {
-	int32_t action;
-	int32_t transaction_id;
-	char *message;
-} __attribute__((__packed__));
-	
-
 int bind4(const char* host, int port);
 int bind6(const char* host, int port);
 void check_readable_socket();
@@ -65,4 +58,6 @@ void send_receive(int sock);
 
 struct bt_connect_request* unpack_connect(int msgLen, char *msg);
 char* pack_connect(int *msgLen, struct bt_connect_reply *reply);
+struct bt_announce4_request* unpack_announce4(int msgLen, char *msg);
+char* pack_announce4(int *msgLen, struct bt_announce4_reply *reply);
 #endif

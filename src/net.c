@@ -95,12 +95,17 @@ void send_receive(int sock) {
 	switch(request->action) {
 		case 0:
 			printf("CONNECT REQUEST\n");
-			struct bt_connect_reply *reply = (struct bt_connect_reply*) connect_request(request);
-			sbuffer = (char*) pack_connect(&sbufLen,reply);
+			struct bt_connect_reply *reply_connect = (struct bt_connect_reply*) connect_request(request);
+			sbuffer = (char*) pack_connect(&sbufLen,reply_connect);
+			free(reply_connect);
 			break;
 		case 1:
 			printf("ANNOUNCE IPv4\n");
-			sbuffer = (char*)announce4(&sbufLen,request->connection_id,request->transaction_id,msg);
+			struct bt_announce4_request *request_announce4 = (struct bt_announce4_request*) unpack_announce4(msgLen,msg);
+			struct bt_announce4_reply *reply_announce4 = (struct bt_announce4_reply*) announce4(request_announce4);
+			sbuffer = (char*) pack_announce4(&sbufLen, reply_announce4);
+			free(request_announce4);
+			free(reply_announce4);
 			break;
 		case 2:
 			printf("SCRAPE\n");
@@ -119,6 +124,7 @@ void send_receive(int sock) {
 	}
 	/* free all allocated resources */
 	free(sbuffer);
+	free(request);
 }
 
 struct bt_connect_request* unpack_connect(int msgLen,char *msg) {
@@ -146,4 +152,59 @@ char* pack_connect(int *msgLen,struct bt_connect_reply *reply) {
 
 	memcpy(sbuffer,reply,16);
 	return sbuffer;
+}
+
+struct bt_announce4_request* unpack_announce4(int msgLen, char *msg) {
+	int requestLen = sizeof(struct bt_announce4_request);
+	struct bt_announce4_request *request = malloc(requestLen);
+	memcpy(request,msg,requestLen);	
+	
+	#ifdef LITTLE_ENDIAN
+        request->downloaded = bswap_64(request->downloaded);
+        request->left = bswap_64(request->left);
+        request->uploaded = bswap_64(request->uploaded);
+        request->event = bswap_32(request->event);
+        request->ip = bswap_32(request->ip);
+        request->key = bswap_32(request->key);
+        request->num_want = bswap_32(request->num_want);
+        request->port = bswap_16(request->port);
+        request->extensions = bswap_16(request->extensions);
+        #endif
+
+	return request;
+}
+
+char* pack_announce4(int *msgLen, struct bt_announce4_reply *reply) {
+	/*
+        #ifdef LITTLE_ENDIAN
+        action = bswap_32(action);
+        interval = bswap_32(interval);
+        transaction_id = bswap_32(transaction_id);
+        seeders = bswap_32(seeders);
+        leechers = bswap_32(leechers);  
+        #endif
+
+        memcpy(sbuffer,&action,4);
+        memcpy(sbuffer+4,&transaction_id,4);
+        memcpy(sbuffer+8,&interval,4);
+        memcpy(sbuffer+12,&leechers,4);
+        memcpy(sbuffer+16,&seeders,4);
+
+        while(num_peers--) {
+                ip = peers[num_peers].ipv4; 
+                port = peers[num_peers].port; 
+
+                LOGMSG(LOG_DEBUG,"%u %u",ip,port);
+                        
+                #ifdef LITTLE_ENDIAN
+                ip = bswap_32(ip);
+                port = bswap_16(port);
+                #endif
+                
+                memcpy(sbuffer+20+num_peers*6,&ip,4);
+                memcpy(sbuffer+24+num_peers*6,&port,2);
+        }
+	*/
+	return NULL;
+
 }

@@ -34,45 +34,15 @@ struct bt_connect_reply* connect_request(struct bt_connect_request *request) {
 	return reply; 
 }
 
-char* announce4(int* sbufLen,struct sockaddr_in cliAddr,uint64_t connection_id, uint32_t transaction_id, const char *msg) {
+struct bt_announce4_reply* announce4(struct bt_announce4_request *request) {
 	
+	#if 0
 	/* TODO: check if connection_id is known */
 
-	char info_hash[20], peer_id[20];
-	char *info_hash_hex, *peer_id_hex;
-	int64_t downloaded,left,uploaded;
-	int32_t event,num_want,num_peers,action;
-	uint32_t ip, key, seeders, leechers;	
-	uint16_t port, extensions;
-
-	memcpy(&info_hash,msg+16,20);
-	memcpy(&peer_id,msg+36,20);
-	memcpy(&downloaded,msg+56,8);
-	memcpy(&left,msg+64,8);
-	memcpy(&uploaded,msg+72,8);
-	memcpy(&event,msg+80,4);
-	memcpy(&ip,msg+84,4);
-	memcpy(&key,msg+88,4);
-	memcpy(&num_want,msg+92,4);
-	memcpy(&port,msg+96,2);
-	memcpy(&extensions,msg+98,2);
-	
 	/* replace 0 (default) ip with the real ip address */
 	if(ip==0) {
 		ip = cliAddr.sin_addr.s_addr;		
 	}
-
-	#ifdef LITTLE_ENDIAN
-	downloaded = bswap_64(downloaded);
-	left = bswap_64(left);
-	uploaded = bswap_64(uploaded);
-	event = bswap_32(event);
-	ip = bswap_32(ip);
-	key = bswap_32(key);
-	num_want = bswap_32(num_want);
-	port = bswap_16(port);
-	extensions = bswap_16(extensions);
-	#endif
 	
 	/* convert info_hash and peer_id to hex so that they are printable */
 	info_hash_hex = strToHexStr(info_hash,20);
@@ -85,7 +55,6 @@ char* announce4(int* sbufLen,struct sockaddr_in cliAddr,uint64_t connection_id, 
 
 	/* TODO: if authentication extension is activated check if auth correct */
 	
-	#if 0
 	/* check if peer has already announced */
 	int announced = has_peer_announced_in_past(info_hash_hex,peer_id_hex);
         /* update entry if peer has announced already */
@@ -97,43 +66,6 @@ char* announce4(int* sbufLen,struct sockaddr_in cliAddr,uint64_t connection_id, 
 	/* get data of the peers from the database */
 	Peer *peers;
 	peers = get_peer_data4(&num_peers,info_hash_hex,num_want);
-
-
-	*sbufLen = 20+num_peers*6;
-	char* sbuffer = malloc(*sbufLen);
-	action = 1;
-	
-	#ifdef LITTLE_ENDIAN
-	action = bswap_32(action);
-	interval = bswap_32(interval);
-	transaction_id = bswap_32(transaction_id);
-	seeders = bswap_32(seeders);
-	leechers = bswap_32(leechers);	
-	#endif
-
-	memcpy(sbuffer,&action,4);
-	memcpy(sbuffer+4,&transaction_id,4);
-	memcpy(sbuffer+8,&interval,4);
-	memcpy(sbuffer+12,&leechers,4);
-	memcpy(sbuffer+16,&seeders,4);
-
-	LOGMSG(LOG_DEBUG,"Number of Peers available: %u",num_peers);
-	while(num_peers--) {
-		ip = peers[num_peers].ipv4; 
-		port = peers[num_peers].port; 
-
-		LOGMSG(LOG_DEBUG,"%u %u",ip,port);
-			
-		#ifdef LITTLE_ENDIAN
-		ip = bswap_32(ip);
-		port = bswap_16(port);
-		#endif
-		
-		memcpy(sbuffer+20+num_peers*6,&ip,4);
-		memcpy(sbuffer+24+num_peers*6,&port,2);
-	}
-
-	return sbuffer;
 	#endif
 	return NULL;
 }
