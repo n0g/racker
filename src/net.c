@@ -1,14 +1,16 @@
+#include <stdlib.h>
 #include <syslog.h>
+#include <errno.h>
 #include <string.h>
 #include <byteswap.h>
 #include <endian.h>
 #include <libconfig.h>
+#include <sys/select.h>
 
 #include "net.h"
 #include "config.h"
 
 int bind4(const char* host, int port) {
-
 	struct sockaddr_in ip4addr;
 	int s;
 
@@ -25,7 +27,6 @@ int bind4(const char* host, int port) {
 }
 
 int bind6(const char* host, int port) {
-
 	struct sockaddr_in6 ip6addr;
 	int s;
 
@@ -41,125 +42,76 @@ int bind6(const char* host, int port) {
 	return s;
 }
 
-void send_receive_loop() {
+void check_readable_socket() {
 	fd_set fds;
+	int numfds, maxfd;
 
-	/* use select method */
 	while(1) {
 		FD_ZERO(&fds);	
-		int numfds = num_sockets;
-		int max = 0;
+		numfds = num_sockets;
+		maxfd = 0;
+		/* fill fd_set */
 		while(numfds--) {
 			FD_SET(sockets[numfds],&fds);
-			if(sockets[numfds] > max) {
-				max = sockets[numfds];
+			if(sockets[numfds] > maxfd) {
+				maxfd = sockets[numfds];
 			}
 		}
-		select(max+1,&fds,NULL,NULL,NULL);
+		/* wait until at least one fd becomes readable */
+		select(maxfd+1,&fds,NULL,NULL,NULL);
+		/* handle clients */
 		numfds = num_sockets;
 		while(numfds--) {
 			if(FD_ISSET(sockets[numfds],&fds)) {
-				printf("got data on interface %d\n",numfds);
-				char msg[mtu], *sbuffer;	
-				struct sockaddr_in cliAddr;
-				int cliLen, msgLen,sbufLen,socket;
-				memset(msg,0x0,mtu);
-				printf("call recvfrom\n");
-				msgLen = recvfrom(sockets[numfds], msg, mtu, 0, (struct sockaddr *) &cliAddr, &cliLen);
-				printf("decode data\n");
-				
-      
-				uint64_t connection_id;
-				int32_t action;
-				uint32_t transaction_id;
-				//get basic protocol details from client
-				memcpy(&connection_id,msg,8);
-				memcpy(&action,msg+8,4);
-				memcpy(&transaction_id,msg+12,4);
-	
-				//convert them to host order
-				#ifdef LITTLE_ENDIAN
-				connection_id = bswap_64(connection_id);
-				action = bswap_32(action);
-				transaction_id = bswap_32(transaction_id);
-				#endif
-				switch(action) {
-					case '0':
-						printf("CONNECT REQUEST\n");
-						break;
-					case '1':
-						printf("ANNOUNCE IPv4\n");
-						break;
-					case '2':
-						printf("SCRAPE\n");
-						break;
-					case '4':
-						printf("ANNOUNCE IPv6\n");
-						break;
-				}
+				send_receive(sockets[numfds]);
 			}
 		}
 	}
-	/*
+}
+
+void send_receive(int sock) {
 	char msg[mtu], *sbuffer;	
 	struct sockaddr_in cliAddr;
-	int cliLen, msgLen,sbufLen,socket;
+	int cliLen, msgLen, sbufLen;
 
+	uint64_t connection_id;
+	int32_t action;
+	uint32_t transaction_id;
 
-	while(1) { 
-		memset(msg,0x0,mtu);
+	/* receive data from socket */
+	memset(msg,0x0,mtu);
+	errno = 0;
+	cliLen = sizeof(struct sockaddr_in);
+	msgLen = recvfrom(sock, msg, mtu, 0, (struct sockaddr *) &cliAddr, &cliLen);
+	if(msgLen == -1) {
+		perror("couldn't receive data");
+	}	
 
-		cliLen = sizeof(cliAddr);
-		msgLen = recvfrom(socket, msg, mtu, 0, (struct sockaddr *) &cliAddr, &cliLen);
+	/* decode basic protocol details */
+	memcpy(&connection_id,msg,8);
+	memcpy(&action,msg+8,4);
+	memcpy(&transaction_id,msg+12,4);
 
-		if(msgLen<=0) {
-			syslog(LOG_ERR,"cannot receive data");
-			return;
-		}
-      
-		uint64_t connection_id;
-		int32_t action;
-		uint32_t transaction_id;
+	/* convert data to host order */
+	#ifdef LITTLE_ENDIAN
+	connection_id = bswap_64(connection_id);
+	action = bswap_32(action);
+	transaction_id = bswap_32(transaction_id);
+	#endif
 
-		//print senders address and port
-		syslog(LOG_DEBUG,"New Packet:Client IP: %s", inet_ntoa(cliAddr.sin_addr)); 
-		syslog(LOG_DEBUG,"Client Port: %hu", ntohs(cliAddr.sin_port));
-		//get basic protocol details from client
-		memcpy(&connection_id,msg,8);
-		memcpy(&action,msg+8,4);
-		memcpy(&transaction_id,msg+12,4);
-	
-		//convert them to host order
-		#ifdef LITTLE_ENDIAN
-		connection_id = bswap_64(connection_id);
-		action = bswap_32(action);
-		transaction_id = bswap_32(transaction_id);
-		#endif
-
-		syslog(LOG_DEBUG,"Datagram length: %u",msgLen);
-		switch( action ) {
-
-			case 0: syslog(LOG_INFO, "CONNECT");
-				sbuffer = (char *)connect_request(&sbufLen,connection_id,transaction_id);
-				break;
-
-			case 1: syslog(LOG_INFO, "IPv4 ANNOUNCE");
-				sbuffer = (char *)announce4(&sbufLen,cliAddr,connection_id,transaction_id,msg);
-				break;
-
-			case 2: syslog(LOG_INFO, "SCRAPE");
-				sbuffer = (char *)scrape(&sbufLen,connection_id,transaction_id,msg,msgLen);
-				break;
-			//someone specified action 4 as ipv6 announce 
-			case 4: syslog(LOG_INFO, "IPv6 ANNOUNCE");
-				sbuffer = (char *)announce6(&sbufLen,cliAddr,connection_id,transaction_id,msg);
-				break;
-
-			default: syslog(LOG_ERR,"Didn't recognize Action %u",action);
-
-		}
-		sendto(socket,sbuffer,sbufLen,0,(struct sockaddr *) &cliAddr,sizeof(cliAddr));
-		free(sbuffer);
+	/* call appropriate protocol handler */
+	switch(action) {
+		case 0:
+			printf("CONNECT REQUEST\n");
+			break;
+		case 1:
+			printf("ANNOUNCE IPv4\n");
+			break;
+		case 2:
+			printf("SCRAPE\n");
+			break;
+		case 4:
+			printf("ANNOUNCE IPv6\n");
+			break;
 	}
-	*/
 }

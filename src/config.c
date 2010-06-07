@@ -53,7 +53,7 @@ void config_listeners(config_t *config) {
 		
 	}
 	/* call aproppriate send/receive loop */
-	send_receive_loop();
+	check_readable_socket();
 }
 
 void config_other(config_t *config) {

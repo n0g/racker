@@ -6,4 +6,5 @@ int num_sockets;
 
 int bind4(const char* host, int port);
 int bind6(const char* host, int port);
-void send_receive_loop();
+void check_readable_socket();
+void send_receive(int sock);
