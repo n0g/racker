@@ -89,38 +89,29 @@ void send_receive(int sock) {
 		perror("couldn't receive data");
 	}	
 	LOGMSG(LOG_DEBUG,"Received %d Bytes of Data\n",msgLen);
-
-	/* decode basic protocol details */
-	struct bt_connect_request request;
-	memcpy(&request,msg,16);
-
-	/* convert data to host order */
-	#ifdef LITTLE_ENDIAN
-	request.connection_id = bswap_64(request.connection_id);
-	request.action = bswap_32(request.action);
-	request.transaction_id = bswap_32(request.transaction_id);
-	#endif
-
+	
+	struct bt_connect_request *request = unpack_connect(msgLen,msg);
 	/* call appropriate protocol handler */
-	switch(request.action) {
+	switch(request->action) {
 		case 0:
 			printf("CONNECT REQUEST\n");
-			sbuffer = (char*)connect_request(&sbufLen,request.connection_id,request.transaction_id);
+			struct bt_connect_reply *reply = (struct bt_connect_reply*) connect_request(request);
+			sbuffer = (char*) pack_connect(&sbufLen,reply);
 			break;
 		case 1:
 			printf("ANNOUNCE IPv4\n");
-			sbuffer = (char*)announce4(&sbufLen,request.connection_id,request.transaction_id,msg);
+			sbuffer = (char*)announce4(&sbufLen,request->connection_id,request->transaction_id,msg);
 			break;
 		case 2:
 			printf("SCRAPE\n");
-			sbuffer = (char*)scrape(&sbufLen,request.connection_id,request.transaction_id,msg,msgLen);
+			sbuffer = (char*)scrape(&sbufLen,request->connection_id,request->transaction_id,msg,msgLen);
 			break;
 		case 4:
 			printf("ANNOUNCE IPv6\n");
-			sbuffer = (char*)announce6(&sbufLen,request.connection_id,request.transaction_id,msg);
+			sbuffer = (char*)announce6(&sbufLen,request->connection_id,request->transaction_id,msg);
 			break;
 		default:
-			sbuffer = (char*)errormsg(&sbufLen,request.transaction_id,"Unkown action");
+			sbuffer = (char*)errormsg(&sbufLen,request->transaction_id,"Unkown action");
 	}
 	/* send resulting buffer */
 	if(sendto(sock,sbuffer,sbufLen,0,(struct sockaddr*) &cliAddr,(socklen_t) cliLen) == -1) {
@@ -128,4 +119,30 @@ void send_receive(int sock) {
 	}
 	/* free all allocated resources */
 	free(sbuffer);
+}
+
+struct bt_connect_request* unpack_connect(int msgLen,char *msg) {
+	struct bt_connect_request *request = malloc(sizeof(struct bt_connect_request));
+	memcpy(request,msg,16);
+	/* convert data to host order */
+	#ifdef LITTLE_ENDIAN
+	request->connection_id = bswap_64(request->connection_id);
+	request->action = bswap_32(request->action);
+	request->transaction_id = bswap_32(request->transaction_id);
+	#endif
+
+	return request;	
+}
+
+char* pack_connect(int *msgLen,struct bt_connect_reply *reply) {
+	char *sbuffer = malloc(sizeof(struct bt_connect_reply));
+
+        #ifdef LITTLE_ENDIAN
+        reply->connection_id = bswap_64(reply->connection_id);
+        reply->action = bswap_32(reply->action);
+        reply->transaction_id = bswap_32(reply->transaction_id);
+        #endif
+
+	memcpy(sbuffer,reply,16);
+	return sbuffer;
 }

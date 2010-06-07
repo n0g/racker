@@ -9,38 +9,29 @@
 #include "config.h"
 #include "net.h"
 
-char* connect_request(int* sbufLen,uint64_t connection_id, uint32_t transaction_id) {
+struct bt_connect_reply* connect_request(struct bt_connect_request *request) {
 
-	char *sbuffer;
-	struct bt_connect_reply reply;
-	reply.action = 0;	
-	reply.connection_id = generate_connection_id();
-	reply.transaction_id = transaction_id;
-	*sbufLen = sizeof(reply);
-	sbuffer = malloc(*sbufLen);
+	struct bt_connect_reply *reply = malloc(sizeof(struct bt_connect_reply));
+	reply->action = 0;	
+	reply->connection_id = generate_connection_id();
+	reply->transaction_id = request->transaction_id;
 	
 	/* will be 0x41727101980 (network order) on connect 
 	4497486125440 in decimal */
-	if( connection_id != 4497486125440LLU ) {
+	if( request->connection_id != 4497486125440LLU ) {
 		LOGMSG(LOG_INFO,"Client sent wrong connection_id on first connect");
+		/* 
 		sbuffer = errormsg(sbufLen,transaction_id, "Wrong connection_id on first connect.");
 		return sbuffer;
+		*/
 	}
 
-	LOGMSG(LOG_DEBUG,"Connection id: %lld",connection_id);
+	LOGMSG(LOG_DEBUG,"Connection id: %lld",request->connection_id);
 	/* TODO: save this generated connection id + ip in database */
-	LOGMSG(LOG_DEBUG,"Transaction id: %u",reply.transaction_id);
-	LOGMSG(LOG_DEBUG,"generated Connection ID: %lld",reply.connection_id);
-	
-	
-	#ifdef LITTLE_ENDIAN
-	reply.connection_id = bswap_64(reply.connection_id);
-	reply.action = bswap_32(reply.action);
-	reply.transaction_id = bswap_32(reply.transaction_id);
-	#endif
+	LOGMSG(LOG_DEBUG,"Transaction id: %u",reply->transaction_id);
+	LOGMSG(LOG_DEBUG,"generated Connection ID: %lld",reply->connection_id);
 
-	memcpy(sbuffer,&reply,16);
-	return sbuffer;
+	return reply; 
 }
 
 char* announce4(int* sbufLen,struct sockaddr_in cliAddr,uint64_t connection_id, uint32_t transaction_id, const char *msg) {
