@@ -1,7 +1,4 @@
-structs and enums for message packets
-macro for making pakets out of structs and chaning byte order
 data storage using a binary tree
 
 authentication (read auth info via libconfig)
 LOGMSG "\n" at end of message
-

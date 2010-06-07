@@ -1,3 +1,14 @@
 The project is currently not compileable, please come back in a few weeks :)
-
 june 4th, 2010
+
+FEATURES
+	* IPv6/IPv4
+	* User Authentication
+	* Synchronization between multiple racker instances
+	* internal data storage (binary tree)
+	* listening on multiple interfaces
+	* Daemonizing
+	* Run as unprivileged user
+
+DEPENDANCIES
+	* libconfig 1.4.5 http://www.hyperrealm.com/main.php?s=libconfig
