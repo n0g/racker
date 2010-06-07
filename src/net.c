@@ -104,25 +104,25 @@ void send_receive(int sock) {
 	switch(action) {
 		case 0:
 			printf("CONNECT REQUEST\n");
-			sbuffer = connect_request(&sbufLen,connection_id,transaction_id);
+			sbuffer = (char*)connect_request(&sbufLen,connection_id,transaction_id);
 			break;
 		case 1:
 			printf("ANNOUNCE IPv4\n");
-			sbuffer = announce4(&sbufLen,connection_id,transaction_id,msg);
+			sbuffer = (char*)announce4(&sbufLen,connection_id,transaction_id,msg);
 			break;
 		case 2:
 			printf("SCRAPE\n");
-			sbuffer = scrape(&sbufLen,connection_id,transaction_id,msg,msg_Len);
+			sbuffer = (char*)scrape(&sbufLen,connection_id,transaction_id,msg,msgLen);
 			break;
 		case 4:
 			printf("ANNOUNCE IPv6\n");
-			sbuffer = announce6(&sbufLen,connection_id,transaction_id,msg);
+			sbuffer = (char*)announce6(&sbufLen,connection_id,transaction_id,msg);
 			break;
 		default:
-			sbuffer = errormsg(&sbufLen,transaction_id,"Unkown action");
+			sbuffer = (char*)errormsg(&sbufLen,transaction_id,"Unkown action");
 	}
 	/* send resulting buffer */
-	if(sendto(sock,sbuffer,sbufLen,0,cliAddr,cliLen) == -1) {
+	if(sendto(sock,sbuffer,sbufLen,0,(struct sockaddr*) &cliAddr,(socklen_t) cliLen) == -1) {
 		LOGMSG(LOG_ERR,"Couldn't send Data");
 	}
 	/* free all allocated resources */
