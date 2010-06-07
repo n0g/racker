@@ -20,7 +20,7 @@ int bind4(const char* host, int port) {
 
 	s = socket(PF_INET, SOCK_DGRAM, 0);
 	if(bind(s, (struct sockaddr*)&ip4addr, sizeof ip4addr) == -1) {
-		logmsg(LOG_ERR,"couldn't bind to interface");
+		LOGMSG(LOG_ERR,"couldn't bind to interface");
 	}
 	
 	return s;
@@ -36,7 +36,7 @@ int bind6(const char* host, int port) {
 
 	s = socket(PF_INET6, SOCK_DGRAM, 0);
 	if(bind(s, (struct sockaddr*)&ip6addr, sizeof ip6addr) == -1) {
-		logmsg(LOG_ERR,"couldn't bind to interface");
+		LOGMSG(LOG_ERR,"couldn't bind to interface");
 	}
 	
 	return s;

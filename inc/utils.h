@@ -2,6 +2,18 @@
 #include <pwd.h>
 #include <stdint.h>
 
+#define LOGMSG(loglvl,args...) \
+	if(debug) { \
+		if(loglvl == LOG_ERR) { \
+			fprintf(stderr,args); \
+		} \
+		else { \
+			printf(args); \
+		} \
+	} else { \
+		syslog(loglvl,args); \
+	}
+		
 int debug;
 
 uint64_t generate_connection_id();

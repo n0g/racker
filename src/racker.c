@@ -61,14 +61,14 @@ int main(int argc, char *argv[]) {
     		}
 	}
 	if(configfile == NULL) {
-		fprintf(stderr,"You need to specify a configuration file\n");
+		LOGMSG(LOG_ERR,"You need to specify a configuration file\n");
 		usage();
 	}
 	/* open syslog */
 	if(!debug) {
 		openlog(argv[0], LOG_PID|LOG_CONS, LOG_DAEMON);
 	}
-	logmsg(LOG_INFO,"----- racker is starting -----");
+	LOGMSG(LOG_INFO,"----- racker is starting -----");
 	/* parse config file */
 	config_t *cfg = config_initialize(configfile);
 	/* read misc config variables */

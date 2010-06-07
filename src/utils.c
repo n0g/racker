@@ -41,7 +41,7 @@ char* strToHexStr(char *str,int len) {
 } 
 
 void sig_handler(int signal) {
-	logmsg(LOG_INFO,"----- racker is stopping -----");
+	LOGMSG(LOG_INFO,"----- racker is stopping -----");
 	if(!debug) {
 		closelog();
 	}
@@ -56,34 +56,21 @@ void write_pid_file(char* filename, int pid) {
         file = fopen(filename,"w");
         fprintf(file,"%u",pid);
         fclose(file);
-        syslog(LOG_DEBUG,"Wrote PID File to %s",filename);
+        LOGMSG(LOG_DEBUG,"Wrote PID File to %s",filename);
 }
 
 void drop_root_rights(char* username) {
         struct passwd *user;
         user = getpwnam(username);
         setuid(user->pw_uid);
-        syslog(LOG_DEBUG,"Changed executing User to %s",username);
+        LOGMSG(LOG_DEBUG,"Changed executing User to %s",username);
 }
 
 void daemonize() {
         int pid;
         pid = fork();
         if (pid > 0) {
-                logmsg(LOG_INFO,"Exiting Parent");
+                LOGMSG(LOG_INFO,"Exiting Parent");
                 exit(EXIT_SUCCESS);
         }
-}
-
-void logmsg(int loglvl, const char* message) {
-	if(debug) {
-		if(loglvl == LOG_ERR) {
-			fprintf(stderr,"%s\n",message);
-		}
-		else {
-			printf("%s\n",message);
-		}
-	} else {
-        	syslog(loglvl,"%s",message);
-	}
 }

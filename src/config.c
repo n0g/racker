@@ -12,7 +12,7 @@ config_t* config_initialize(char* filename) {
 	if(config != NULL) {
 		config_init(config);
 		if(config_read_file(config,filename) == CONFIG_FALSE) {
-			fprintf(stderr,"%s on line %d\n",config_error_text(config),config_error_line(config));
+			LOGMSG(LOG_ERR,"%s on line %d\n",config_error_text(config),config_error_line(config));
 			config_destroy(config);
 			exit(EXIT_FAILURE);	
 		}
@@ -27,7 +27,7 @@ void config_listeners(config_t *config) {
 
 	/* read interface settings */
 	if((interfaces = config_lookup(config,"interfaces")) == NULL) {
-		logmsg(LOG_ERR,"Couldn't read Interfaces\n");
+		LOGMSG(LOG_ERR,"Couldn't read Interfaces\n");
 	}
 	
 	interface_num = config_setting_length(interfaces);
@@ -61,7 +61,7 @@ void config_other(config_t *config) {
 	config_lookup_int(config,"others.mtu",(long*)&mtu) &&
 	config_lookup_string(config,"others.user",&user) &&
 	config_lookup_string(config,"others.pidfile",&pidfile))) {
-		logmsg(LOG_ERR,"couldn't read miscoptions from config file\n");
+		LOGMSG(LOG_ERR,"couldn't read miscoptions from config file\n");
 		exit(EXIT_FAILURE);
 	}
 }
