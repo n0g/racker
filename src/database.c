@@ -7,87 +7,50 @@
 #include "database.h"
 #include "bintree.h"
 
+struct bt_node *tree;
+
+void initialize_database() {
+	tree = NULL;
+}
+
+int compare(const void* data1, const void *data2) {
+	char *a = ((struct bt_torrent*)data1)->info_hash;
+	char *b = ((struct bt_torrent*)data2)->info_hash;
+	int i;
+	for(i=0;i<20;i++) {
+		if(a[i] > b[i]) {
+			return -1;
+		} else if(a[i] < b[i]) {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 int has_peer_announced_in_past(const char* infohash, const char* peerid) {
+	struct bt_torrent tmp;
+	tmp.info_hash = infohash;
 
-#if 0
-	int announced;
-	char query[500];
-	MYSQL_RES *res;
-	MYSQL_ROW row;
-
-	sprintf(query,"SELECT COUNT(*) FROM peers WHERE infohash='%s' AND peerid='%s'",infohash,peerid);
-        syslog(LOG_DEBUG,"%s",query);
-        if (mysql_query(conn, query)) {
-                syslog(LOG_ERR,"%s",mysql_error(conn));
-                exit(1);
-        }   
-        res = mysql_use_result(conn);
-        row = mysql_fetch_row(res);
-	announced=atoi(row[0]);
-	mysql_free_result(res);	
-
-	return announced;
-#endif
+	struct bt_node **node = search(&tree,&compare, &tmp);
+	if(*node != NULL) {
+		while((*node)->data->next != NULL) {
+			/* walk through all peers and check if the peerid exists */
+		}	
+	}
+	return 0;
 }
 
 void update_database(struct bt_peer *peer) {
-
-#if 0
-	char query[500];
-	realloc(ip,17);
-	*(ip+16) = '\0';
-
-	 if(announced==1) {
-                sprintf(query,"UPDATE peers SET ts=NOW(),downloaded=%lld,bleft=%lld,uploaded=%lld,ipv6=%s,idkey=%u,port=%d WHERE infohash='%s' and peerid='%s'",downloaded,left,uploaded,ip,key,port,infohash,peerid);
-        }
-        //or insert the new infos if peer hasn't announced until now
-        else {
-        sprintf(query,"INSERT INTO peers VALUES(CURRENT_TIMESTAMP,'%s','%s',%lld,%lld,%lld,0,'%s',%u,%d)",infohash,peerid,downloaded,left,uploaded,ip,key,port);
-        }
-        //execute query
-        syslog(LOG_DEBUG,"%s",query);
-        if (mysql_query(conn, query)) {
-        	syslog(LOG_ERR,"%s",mysql_error(conn));
-        	exit(1);
-	}
-#endif
+	
 }	
 
 void delete_old_entries(int interval) {
 
-#if 0
-	char query[500];
-
-	sprintf(query,"DELETE FROM peers WHERE TIMESTAMPDIFF(SECOND,ts,NOW())>%u",2*interval);
-        syslog(LOG_DEBUG,"%s",query);
-        if (mysql_query(conn, query)) {
-                syslog(LOG_ERR,"%s",mysql_error(conn));
-                exit(1);
-        }
-#endif
 }
 
 void seeders_and_leechers(const char* infohash,int* seeders, int* leechers) {
-
-#if 0
-	char query[500];
-	MYSQL_RES *res;
-	MYSQL_ROW row;
-
-	 sprintf(query,"SELECT COUNT(*) AS 'Seeders',(SELECT COUNT(*) FROM peers WHERE bleft!=0 AND infohash='%s' AND ipv4!=0) AS 'Leechers' FROM peers WHERE bleft=0 AND infohash='%s' AND ipv4!=0",infohash,infohash);
-        syslog(LOG_DEBUG,"%s",query);
-        if (mysql_query(conn,query)) {
-		syslog(LOG_ERR,"%s",mysql_error(conn));
-                exit(1);
-        }
-        res = mysql_use_result(conn);
-        row = mysql_fetch_row(res);
-
-        *seeders = atoi(row[0]);
-        *leechers = atoi(row[1]);
-
-        mysql_free_result(res);
-#endif
+	/* search for torrent */
+	/* if it exists set seeders and leechers appropriately */
 }
 
 struct bt_peer* get_peer_data(int ip_version,const char* infohash,int number_of_entries) {

@@ -18,6 +18,8 @@ struct bt_torrent {
 	struct bt_peer *next;
 };
 
+void initialize_database();
+int compare(const void *data1, const void *data2);
 int has_peer_announced_in_past(const char* infohash, const char* peerid);
 void update_database(struct bt_peer *peer);
 void delete_old_entries(int interval);
