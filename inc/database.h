@@ -1,10 +1,26 @@
 #include <stdint.h>
 
+struct bt_peer {
+	char peerid[20];
+	uint32_t key;
+	uint64_t downloaded;
+	uint64_t left;
+	uint64_t uploaded;	
+	uint32_t ip4;
+	char ipv6[16];
+	uint16_t port;
+	struct bt_peer *next;
+};
+struct bt_torrent {
+	char info_hash[20];
+	uint32_t seeders;
+	uint32_t leechers;
+	struct bt_peer *next;
+};
+
 int has_peer_announced_in_past(const char* infohash, const char* peerid);
-void update_database4(const char* infohash,const char* peerid,uint64_t downloaded,uint64_t uploaded, uint64_t left, uint32_t ip, uint32_t key, uint16_t port,int announced);
-void update_database6(const char* infohash,const char* peerid,uint64_t downloaded,uint64_t uploaded, uint64_t left, char* ip, uint32_t key, uint16_t port,int announced);
+void update_database(struct bt_peer *peer);
 void delete_old_entries(int interval);
 void seeders_and_leechers(const char* infohash,int* seeders, int* leechers);
-/* (struct bt_peer4*) get_peer_data4(int *peerLen, const char* infohash,int number_of_entries);
-Peer* get_peer_data6(int *peerLen, const char* infohash,int number_of_entries); */
+struct bt_peer* get_peer_data(int ip_version,const char* infohash,int number_of_entries);
 int is_user_authenticated(const char* username, const char* hash);

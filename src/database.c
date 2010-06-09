@@ -1,4 +1,3 @@
-#include <mysql.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <syslog.h>
@@ -6,30 +5,11 @@
 #include <stdlib.h>
 
 #include "database.h"
-
-MYSQL* conn;
-
-void connect_database(char *server,int port,char *user, char* password, char *database) {
-
-        conn = mysql_init(NULL);
-	
-        /* Connect to database */
-        if (!mysql_real_connect(conn, server,user, password, database,0, NULL, 0)) {
-                syslog(LOG_ERR,"%s",mysql_error(conn));
-                exit(1);
-        }
-        if(conn != NULL) {
-                syslog(LOG_INFO,"Database Connection established");
-        }
-}
-
-void disconnect_database() {
-
-	mysql_close(conn);
-}
+#include "bintree.h"
 
 int has_peer_announced_in_past(const char* infohash, const char* peerid) {
 
+#if 0
 	int announced;
 	char query[500];
 	MYSQL_RES *res;
@@ -47,29 +27,12 @@ int has_peer_announced_in_past(const char* infohash, const char* peerid) {
 	mysql_free_result(res);	
 
 	return announced;
+#endif
 }
 
-void update_database4(const char* infohash,const char* peerid,uint64_t downloaded,uint64_t uploaded, uint64_t left, uint32_t ip, uint32_t key, uint16_t port,int announced) {
+void update_database(struct bt_peer *peer) {
 
-	char query[500];
-
-	 if(announced==1) {
-                sprintf(query,"UPDATE peers SET ts=NOW(),downloaded=%lld,bleft=%lld,uploaded=%lld,ipv4=%u,idkey=%u,port=%d WHERE infohash='%s' and peerid='%s'",downloaded,left,uploaded,ip,key,port,infohash,peerid);
-        }
-        //or insert the new infos if peer hasn't announced until now
-        else {
-        sprintf(query,"INSERT INTO peers VALUES(CURRENT_TIMESTAMP,'%s','%s',%lld,%lld,%lld,%u,'',%u,%d)",infohash,peerid,downloaded,left,uploaded,ip,key,port);
-        }
-        //execute query
-        syslog(LOG_DEBUG,"%s",query);
-        if (mysql_query(conn, query)) {
-        	syslog(LOG_ERR,"%s",mysql_error(conn));
-        	exit(1);
-	}
-}	
-
-void update_database6(const char* infohash,const char* peerid,uint64_t downloaded,uint64_t uploaded, uint64_t left, char* ip, uint32_t key, uint16_t port,int announced) {
-
+#if 0
 	char query[500];
 	realloc(ip,17);
 	*(ip+16) = '\0';
@@ -87,10 +50,12 @@ void update_database6(const char* infohash,const char* peerid,uint64_t downloade
         	syslog(LOG_ERR,"%s",mysql_error(conn));
         	exit(1);
 	}
+#endif
 }	
 
 void delete_old_entries(int interval) {
 
+#if 0
 	char query[500];
 
 	sprintf(query,"DELETE FROM peers WHERE TIMESTAMPDIFF(SECOND,ts,NOW())>%u",2*interval);
@@ -99,10 +64,12 @@ void delete_old_entries(int interval) {
                 syslog(LOG_ERR,"%s",mysql_error(conn));
                 exit(1);
         }
+#endif
 }
 
 void seeders_and_leechers(const char* infohash,int* seeders, int* leechers) {
 
+#if 0
 	char query[500];
 	MYSQL_RES *res;
 	MYSQL_ROW row;
@@ -120,10 +87,12 @@ void seeders_and_leechers(const char* infohash,int* seeders, int* leechers) {
         *leechers = atoi(row[1]);
 
         mysql_free_result(res);
+#endif
 }
 
-Peer* get_peer_data4(int *peerLen,const char* infohash,int number_of_entries) {
+struct bt_peer* get_peer_data(int ip_version,const char* infohash,int number_of_entries) {
 
+#if 0
 	MYSQL_RES *res;
 	MYSQL_ROW row;
 	char query[500];
@@ -151,40 +120,9 @@ Peer* get_peer_data4(int *peerLen,const char* infohash,int number_of_entries) {
 	}
 	
 	return peers;
-}
-
-Peer* get_peer_data6(int *peerLen,const char* infohash,int number_of_entries) {
-
-	MYSQL_RES *res;
-	MYSQL_ROW row;
-	char query[500];
-	int num_peers;
-
-	//TODO: check if num_want isn't larger than the the max possible (Datagram can't be bigger than MTU)
-	sprintf(query,"SELECT ipv6,port FROM peers WHERE infohash='%s' AND ipv4!=0 ORDER BY RAND() LIMIT %u",infohash,number_of_entries);
-        syslog(LOG_DEBUG,"%s",query);
-        if (mysql_query(conn, query)) {
-                syslog(LOG_ERR,"%s",mysql_error(conn));
-                exit(1);
-        }
-        res = mysql_store_result(conn);
-	num_peers = mysql_num_rows(res);
-	*peerLen = num_peers;
-	
-	Peer *peers = malloc(sizeof(Peer)*num_peers);
-	
-	int i;
-	for(i=0;i<num_peers;i++) {
-
-		row = mysql_fetch_row(res);
-		memcpy(peers[i].ipv6,row[0],16);
-		peers[i].port = atoi(row[1]);
-	}
-	
-	return peers;
+#endif
 }
 
 int is_user_authenticated(const char* username, const char* hash) {
-
 	return 0;
 }
