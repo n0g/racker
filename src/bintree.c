@@ -20,11 +20,11 @@ struct bt_node** bt_search(struct bt_node **tree,int (*compare)(const void *,con
 	}
 	
 	/* search in left/right subtree */
-	int compare_result = compare((const void*) (*tree)->data,(const void*) data);
+	int compare_result = compare((*tree)->data, data);
 	if(compare_result < 0) {
-		return bt_search(&(*tree)->left,compare,data);	
-	} else if (compare_result > 0) {
 		return bt_search(&(*tree)->right,compare,data);	
+	} else if (compare_result > 0) {
+		return bt_search(&(*tree)->left,compare,data);	
 	}
 
 	/* found element */
@@ -37,6 +37,16 @@ void bt_insert(struct bt_node **tree, int (*compare)(const void *, const void *)
 	/* add element if it isn't in the tree */
 	if(*node == NULL) {
 		*node = bt_new_node(data);
+	}
+}
+
+void bt_walk(struct bt_node **tree, void (*action)(const void *)) {
+	if((*tree)->left != NULL) {
+		bt_walk(&(*tree)->left,action);
+	}
+	action((*tree)->data);
+	if((*tree)->right != NULL) {
+		bt_walk(&(*tree)->right,action);
 	}
 }
 
@@ -70,3 +80,28 @@ void bt_delete(struct bt_node **node) {
 	/* delete predecessor */
 	bt_delete(pred);
 }
+#if 0
+int compare(const void *data1,const void *data2) {
+	return *((int*)data1)-*((int*)data2);
+}
+
+void action(const void *data) {
+	printf("%d\n",*((int*)data));
+}
+
+int main(int argc,char *argv[]) {
+	struct bt_node *tree;
+	tree = NULL;
+	
+	int i = 10;
+	int *random;
+	while(i--) {
+		
+		random = malloc(sizeof(int));
+		*random = rand();
+		bt_insert(&tree,&compare,random);
+	}	
+	bt_walk(&tree,&action);
+	return EXIT_SUCCESS;
+}
+#endif

@@ -8,3 +8,4 @@ void bt_free_node(struct bt_node *node);
 struct bt_node** bt_search(struct bt_node **tree,int (*compare)(const void *, const void *), void *data);
 void bt_insert(struct bt_node **tree,int (*compare)(const void *, const void *), void *data);
 void bt_delete(struct bt_node **node);
+void bt_walk(struct bt_node **tree, void (*action)(const void *));

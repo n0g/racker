@@ -1,9 +1,5 @@
 #include <stdint.h>
 
-
-void connect_database(char *server, int port,char *user, char *password, char *database);
-void disconnect_database();
-
 int has_peer_announced_in_past(const char* infohash, const char* peerid);
 void update_database4(const char* infohash,const char* peerid,uint64_t downloaded,uint64_t uploaded, uint64_t left, uint32_t ip, uint32_t key, uint16_t port,int announced);
 void update_database6(const char* infohash,const char* peerid,uint64_t downloaded,uint64_t uploaded, uint64_t left, char* ip, uint32_t key, uint16_t port,int announced);
