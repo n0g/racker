@@ -1,5 +1,5 @@
 struct bt_node {
-	void *datą;
+	void *data;
 	struct bt_node *left, *right;
 };
 
